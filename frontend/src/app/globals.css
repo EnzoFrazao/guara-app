@@ -1,0 +1,324 @@
+@import "tailwindcss";
+
+/* ───────────────────────── Temas ─────────────────────────
+   Dois temas: claro, com as cores oficiais da Vale, e escuro (para o CCO em sala de
+   pouca luz). O atributo `data-tema="claro"` no <html> liga o claro, e o servidor já
+   o manda: o claro é o padrão de quem visita (ADR 0002).
+
+   REGRA: o escuro é o estado base DO CSS (sem atributo) e NÃO pode mudar. Por isso
+   as telas mantêm as classes que já tinham e só GANHAM uma variante `claro:` ao
+   lado. Assim é impossível um ajuste do claro vazar para o escuro.
+
+   O MAPA fica de fora: tiles, pontos de status, trechos e cobertura mantêm as
+   cores dos dois lados (ver COR_STATUS_MAPA em lib/rotulos.ts). */
+
+@custom-variant claro (&:where([data-tema="claro"] *));
+
+/* Paleta Vale. Hex do manual da marca (p23 e p38) e do guia de cores do logo Guará. */
+@theme {
+  --color-verde-vale: #007e7a;      /* Pantone 328 C · penas e rota do guará */
+  --color-verde-vale-escuro: #00615e;
+  --color-amarelo-vale: #ecb11f;    /* Pantone 124 C · pontos de localização */
+  --color-vermelho-vale: #bb133e;   /* Pantone 193 C · corpo e asa do guará */
+  --color-cinza-vale: #747678;      /* Pantone Cool Gray 9 C · só para não-texto */
+
+  /* Tinta do tema claro, em três níveis. O Cinza Vale oficial dá 4,54:1 sobre branco
+     puro, então reprova em AA assim que o fundo ganha qualquer tom; por isso o texto
+     usa Grafite e Ardósia (ambos do guia do logo) e um meio-termo entre os dois. */
+  --color-tinta: #242424;           /* Grafite · títulos e números */
+  --color-tinta-media: #45494f;     /* secundário · rótulos e células */
+  --color-tinta-suave: #5f646c;     /* Ardósia · legendas e ids */
+
+  /* Superfícies do tema claro, derivadas do cinza Vale (sem azulado). */
+  --color-papel: #ffffff;           /* cartão */
+  --color-areia: #f3f4f5;           /* fundo da página e encaixes dentro do cartão */
+  --color-nevoa: #e6e9ea;           /* chip inativo, trilho de barra */
+  --color-traco: #dcdfe1;           /* borda padrão */
+  --color-traco-forte: #c2c7ca;     /* borda em destaque */
+
+  /* Cartão branco sobre fundo areia: a borda sozinha deixa tudo chapado. */
+  --shadow-cartao: 0 1px 2px rgb(36 36 36 / 0.04), 0 1px 3px rgb(36 36 36 / 0.06);
+}
+
+:root {
+  --fundo: #09090b;
+  --superficie: #141417;
+  --superficie-alta: #1c1c20;
+  --borda: #27272a;
+  --texto: #fafafa;
+  --texto-suave: #a1a1aa;
+  /* Cor do foco e dos detalhes de marca. No escuro segue o verde de "disponível". */
+  --marca: #34d399;
+  /* Trilho da rosca do dashboard (PizzaStatus): o que sobra quando um status é 0. */
+  --color-trilho-rosca: #27272a;
+  color-scheme: dark;
+}
+
+[data-tema="claro"] {
+  --fundo: #f3f4f5;
+  --superficie: #ffffff;
+  --superficie-alta: #ffffff;
+  --borda: #dcdfe1;
+  --texto: #242424;
+  --texto-suave: #5f646c;
+  --marca: #007e7a;
+  --color-trilho-rosca: #e6e9ea;
+  /* "only": sem isso o escuro automático do navegador (Chrome do Android, Samsung Internet,
+     celular em modo escuro) escurece a página clara por conta própria. */
+  color-scheme: only light;
+}
+
+html {
+  /* Sem isso o Safari do iPhone aumenta a fonte sozinho ao girar a tela. */
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+
+body {
+  background: var(--fundo);
+  color: var(--texto);
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Campos e botões. Ficam aqui para as 4 telas não repetirem a mesma receita. */
+.campo {
+  border-radius: 0.375rem;
+  border: 1px solid var(--borda);
+  background: var(--superficie-alta);
+  color: var(--texto);
+  padding: 0.375rem 0.625rem;
+  font-size: 0.875rem;
+}
+.campo::placeholder {
+  color: #52525b;
+}
+[data-tema="claro"] .campo {
+  background: var(--color-papel);
+}
+[data-tema="claro"] .campo::placeholder {
+  color: #9aa0a4;
+}
+.campo:focus-visible {
+  outline: 2px solid var(--marca);
+  outline-offset: 1px;
+}
+/* O seletor de data do Chrome desenha o ícone preto sobre fundo escuro. No claro o
+   ícone já nasce certo, então o invert sai. */
+.campo::-webkit-calendar-picker-indicator {
+  filter: invert(1) opacity(0.6);
+}
+[data-tema="claro"] .campo::-webkit-calendar-picker-indicator {
+  filter: none;
+  opacity: 0.6;
+}
+
+.botao {
+  border-radius: 0.375rem;
+  background: #fafafa;
+  color: #09090b;
+  padding: 0.375rem 0.75rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+.botao:hover {
+  background: #d4d4d8;
+}
+.botao:disabled {
+  opacity: 0.4;
+}
+[data-tema="claro"] .botao {
+  background: var(--color-verde-vale);
+  color: #ffffff;
+}
+[data-tema="claro"] .botao:hover {
+  background: var(--color-verde-vale-escuro);
+}
+
+.botao-secundario {
+  border-radius: 0.375rem;
+  border: 1px solid var(--borda);
+  background: transparent;
+  color: var(--texto-suave);
+  padding: 0.375rem 0.75rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+.botao-secundario:hover:not(:disabled) {
+  background: var(--superficie-alta);
+  color: var(--texto);
+}
+.botao-secundario:disabled {
+  opacity: 0.4;
+}
+[data-tema="claro"] .botao-secundario:hover:not(:disabled) {
+  background: var(--color-areia);
+}
+
+/* Celular e tablet (abaixo de lg). Campo com fonte menor que 16 px faz o iOS dar zoom
+   na página ao focar, e a tela fica deslocada depois. */
+@media (max-width: 1023.98px) {
+  .campo {
+    font-size: 16px;
+  }
+
+  /* O Netlify injeta o selo "Powered by Netlify" num iframe fixo no canto de baixo, por cima
+     das abas (Histórico e Cadastro). Sobe o selo para cima da barra (3.5rem de NavMobile + borda
+     + área segura) em vez de escondê-lo. O estilo dele é inline, daí o !important. */
+  #nl-badge-frame {
+    bottom: calc(3.5rem + 1px + env(safe-area-inset-bottom)) !important;
+  }
+}
+/* Dedo precisa de alvo maior que mouse: 44 px é o mínimo recomendado. */
+@media (pointer: coarse) {
+  .campo,
+  .botao,
+  .botao-secundario {
+    min-height: 44px;
+  }
+}
+
+/* Fileira de chips que rola para o lado no celular sem mostrar barra de rolagem. */
+.sem-barra {
+  scrollbar-width: none;
+}
+.sem-barra::-webkit-scrollbar {
+  display: none;
+}
+
+/* Leaflet: os popups, tooltips e controles vêm claros por padrão. */
+.leaflet-container {
+  background: #0b0b0d;
+  /* Só o vazio atrás dos tiles enquanto carregam. Os tiles em si não mudam de tema. */
+  /* Os panes do Leaflet usam z-index 200–1000; isolando o mapa, eles não passam por cima
+     da barra fixa do topo no celular quando a página rola. */
+  isolation: isolate;
+}
+/* Os tiles ficam coloridos de propósito: no mapa, a cor do terreno, da água e dos
+   trilhos ajuda a situar quem olha. O escuro vale para o resto da interface. */
+.leaflet-popup-content-wrapper,
+.leaflet-popup-tip,
+.leaflet-tooltip {
+  background: var(--superficie-alta);
+  color: var(--texto);
+  border: 1px solid var(--borda);
+  box-shadow: 0 8px 24px rgb(0 0 0 / 0.5);
+}
+.leaflet-tooltip::before {
+  display: none;
+}
+.guara-popup strong {
+  display: block;
+  margin-bottom: 0.25rem;
+}
+.guara-popup p {
+  margin: 0;
+  color: var(--texto-suave);
+  font-size: 0.75rem;
+  line-height: 1.5;
+}
+.leaflet-bar a,
+.leaflet-control-attribution {
+  background: var(--superficie-alta) !important;
+  color: var(--texto-suave) !important;
+  border-color: var(--borda) !important;
+}
+.leaflet-bar a:hover {
+  background: #2a2a2f !important;
+}
+.leaflet-control-attribution a {
+  color: #71717a !important;
+}
+
+/* O cromo do Leaflet (popup, tooltip, botões de zoom, crédito) acompanha o tema: é
+   painel de interface, não desenho do mapa. Os tiles, os pontos de status, os
+   círculos dos trechos e a cobertura continuam com as mesmas cores nos dois temas. */
+[data-tema="claro"] .leaflet-container {
+  background: var(--color-areia);
+}
+[data-tema="claro"] .leaflet-popup-content-wrapper,
+[data-tema="claro"] .leaflet-popup-tip,
+[data-tema="claro"] .leaflet-tooltip {
+  box-shadow: 0 8px 24px rgb(36 36 36 / 0.18);
+}
+[data-tema="claro"] .leaflet-bar a:hover {
+  background: var(--color-areia) !important;
+}
+
+/* O ponto que pulsa no mapa e nos indicadores "ao vivo". */
+@keyframes guara-pulso {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.25; }
+}
+.pulso {
+  animation: guara-pulso 1.6s ease-in-out infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+  .pulso {
+    animation: none;
+  }
+}
+
+/* Cobertura do mapa: o filtro #guara-gosma (MapaLeaflet.tsx) funde os círculos do
+   pane "radar" numa forma única; o pane "radarPulso" faz a onda de radar. */
+.leaflet-radar-pane svg > g {
+  filter: url(#guara-gosma);
+}
+.guara-radar-pulso {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: guara-radar 3s ease-out infinite;
+}
+@keyframes guara-radar {
+  from {
+    transform: scale(0.15);
+    opacity: 0.7;
+  }
+  to {
+    transform: scale(1);
+    opacity: 0;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .guara-radar-pulso {
+    animation: none;
+    opacity: 0;
+  }
+}
+
+/* Pessoas andando no mapa (escolherQuemAnda em MapaLeaflet.tsx). Cada uma faz um laço de
+   poucos pixels; duração, atraso e --anda-escala (encolhe com o zoom) vêm do JS, para o
+   trajeto não recomeçar a cada 5 s. É só desenho: a posição e o popup continuam sendo a
+   leitura do ESP32. O maior deslocamento daqui (~7,3 px) é o PASSO_MAX_PX do JS. */
+.guara-anda {
+  --anda-escala: 1;
+  animation-name: guara-anda;
+  animation-timing-function: ease-in-out;
+  animation-iteration-count: infinite;
+}
+@keyframes guara-anda {
+  0%,
+  100% {
+    transform: translate(0, 0);
+  }
+  25% {
+    transform: translate(calc(var(--anda-x1) * var(--anda-escala)), calc(var(--anda-y1) * var(--anda-escala)));
+  }
+  50% {
+    transform: translate(calc(var(--anda-x2) * var(--anda-escala)), calc(var(--anda-y2) * var(--anda-escala)));
+  }
+  75% {
+    transform: translate(calc(var(--anda-x3) * var(--anda-escala)), calc(var(--anda-y3) * var(--anda-escala)));
+  }
+}
+.guara-anda-1 { --anda-x1: 4px; --anda-y1: -3px; --anda-x2: 7px; --anda-y2: 1px; --anda-x3: 3px; --anda-y3: 4px; }
+.guara-anda-2 { --anda-x1: -3px; --anda-y1: -4px; --anda-x2: -6px; --anda-y2: -1px; --anda-x3: -2px; --anda-y3: 3px; }
+.guara-anda-3 { --anda-x1: 2px; --anda-y1: 5px; --anda-x2: -3px; --anda-y2: 6px; --anda-x3: -4px; --anda-y3: 2px; }
+.guara-anda-4 { --anda-x1: -5px; --anda-y1: 2px; --anda-x2: -2px; --anda-y2: 6px; --anda-x3: 3px; --anda-y3: 3px; }
+.guara-anda-5 { --anda-x1: 3px; --anda-y1: -5px; --anda-x2: -2px; --anda-y2: -7px; --anda-x3: -4px; --anda-y3: -3px; }
+.guara-anda-6 { --anda-x1: 5px; --anda-y1: 3px; --anda-x2: 2px; --anda-y2: -4px; --anda-x3: -3px; --anda-y3: -2px; }
+@media (prefers-reduced-motion: reduce) {
+  .guara-anda {
+    animation: none;
+  }
+}
