@@ -49,7 +49,7 @@ Cerca de **50 maquinistas e manobristas por turno** trabalham em **13 km de pát
 
 ## A solução
 
-Cada pessoa leva uma tag **ESP32** com GPS e rádio. Os gateways enviam a latitude, a longitude e a velocidade de todos à API, que guarda tudo e empurra ao painel. Com isso o sistema:
+Cada pessoa leva uma tag **ESP32** (Heltec V4, com GPS e rádio LoRa) presa ao EPI. Os pacotes saltam por uma mesh LoRa até um gateway, e os gateways enviam a latitude, a longitude e a velocidade de todos à API, que guarda tudo e empurra ao painel. Com isso o sistema:
 
 - 📍 **mostra onde está cada pessoa**, num mapa do pátio atualizado ao vivo;
 - ⚡ **recomenda quem chega mais rápido** a cada frente de trabalho *(proposto)*;
@@ -64,7 +64,7 @@ Cada pessoa leva uma tag **ESP32** com GPS e rádio. Os gateways enviam a latitu
 | Tema claro e escuro, VLibras (Libras), layout de celular | ✅ Implementado |
 | API FastAPI: `/health` e os três WebSockets (gateway, painel, relé) | 🟡 **Esqueleto** funcionando, com autenticação e ack |
 | Demais rotas REST, persistência, login, regras de alerta e bloqueio | 🔴 Declaradas, respondem `501`; falta construir |
-| ESP32, rede LoRa, relé de segurança | 🔴 Proposto, não construído |
+| Tag Heltec V4, mesh LoRa, gateway e relé de segurança (firmware em C++) | 🔴 Proposto, não construído |
 
 ## Telas
 
@@ -75,7 +75,7 @@ Cada pessoa leva uma tag **ESP32** com GPS e rádio. Os gateways enviam a latitu
 | **Histórico** | `/historico` | Posições passadas, com filtros |
 | **Cadastro** | `/cadastro` | Vínculo pessoa ↔ ESP32 (avulso, pelo estoque, ou por um assistente de novo cadastro) |
 
-Não há tela de login: quem coordena abre a URL e o painel já funciona. O operário não é usuário do sistema — ele entra como dado, pela tag que carrega.
+O protótipo não tem tela de login: quem abre a URL já vê o painel. Na homologação todas as rotas da API exigem login (JWT, perfis `analista`, `seguranca` e `admin`), e a tela de login ainda precisa ser feita. O operário não é usuário do sistema — ele entra como dado, pela tag que carrega.
 
 ### Destaques do painel
 
@@ -88,7 +88,7 @@ Não há tela de login: quem coordena abre a URL e o painel já funciona. O oper
 
 ```mermaid
 flowchart LR
-    A["ESP32 + GPS + rádio LoRa<br/>(uma por pessoa)"] -- "LoRa" --> B["Gateway<br/>(no pátio)"]
+    A["Heltec V4: ESP32 + GPS + LoRa<br/>(uma por pessoa)"] -- "mesh LoRa<br/>AES-128" --> B["Gateway LoRa<br/>(ESP32-S3, no pátio)"]
     B -- "WSS /ws/gateway<br/>JSON + ack por seq" --> C["API FastAPI"]
     C <--> D[("PostgreSQL<br/>+ PostGIS")]
     C -- "WSS /ws/painel<br/>eventos" --> E["Painel web<br/>(Vite SPA)"]
@@ -99,17 +99,44 @@ flowchart LR
 ```
 
 - **Uma porta só.** O Caddy atende a 443 e repassa `/api` e `/ws` à API; o painel é estático. Banco e API nunca ficam expostos para fora.
-- **Sem broker.** Gateway, relé e painel falam com a API por WebSocket. Entrega confirmada, aviso de queda e reenvio são código nosso (ack por `id` e `seq`, ping, fila no gateway).
+- **Sem broker.** Gateway, relé e painel falam com a API por WebSocket, e o que o MQTT fazia sozinho passa a ser código nosso. **Já existe** no back-end o ack por `id` e `seq` e o descarte de leitura repetida (em memória). **Propostos, ainda não construídos:** reenvio sem ack em 10 s e fila sem internet (no gateway), ping a cada 20 s com gateway offline após 60 s sem resposta, e o relé abrir sozinho após 15 s sem sinal de vida do servidor. Os tempos são proposta para a demonstração.
+
+## Fluxo de ponta a ponta
+
+Cada leitura passa por nove etapas; cada uma recebe algo, faz uma coisa só e entrega adiante.
+
+| # | Onde | O que acontece | Situação |
+|---|---|---|---|
+| 1 | Tag (Heltec V4, no EPI) | A cada 30 s monta um pacote com id, sequência, hora UTC, lat, lon, velocidade, satélites, HDOP e, se houver, bateria e queda (IMU) | 🔴 Proposto |
+| 2 | Mesh LoRa | O pacote salta de vizinho em vizinho até um gateway (criptografado com AES-128) e pode chegar duplicado | 🔴 Proposto |
+| 3 | Gateway LoRa (ESP32-S3) | Decifra, descarta duplicados pela sequência, converte em JSON e mantém um WSS aberto com a API; sem internet, guarda em fila | 🔴 Proposto |
+| 4 | API: porta de entrada | Aceita só com o token do gateway e responde `ack` a cada mensagem | 🟡 Esqueleto feito |
+| 5 | API: ingestão | Valida o JSON, descarta leitura ruim (menos de 4 satélites ou HDOP alto), acha a pessoa vinculada e o trecho (PostGIS) e grava | 🟡 Só valida o JSON; o resto falta |
+| 6 | API: regras | Infere o estado (parado, deslocando, embarcado), verifica cercas de risco, pessoa isolada e dispositivo sem sinal (3 envios perdidos = 90 s) e gera alerta ou bloqueio | 🔴 Falta |
+| 7 | API: tempo real | Empurra cada mudança aos painéis abertos por `/ws/painel` | 🟡 Só o evento `posicao` |
+| 8 | Painel | Move o ponto no mapa e acende alertas; o analista aciona, reconhece alerta ou libera bloqueio por REST | 🟡 Visual com dados ilustrativos; WebSocket só com `VITE_WS_URL` |
+| 9 | Registro e aprendizado | Guarda hora prevista e real de cada acionamento; um job noturno recalcula o tempo típico entre trechos (mediana e percentil 90) | 🔴 Falta |
+
+No bloqueio da área de basculamento, a etapa 6 também manda um comando ao controlador do relé por `/ws/rele`. Na homologação isso é só demonstração (LED, buzzer e relé de bancada); ligar ao virador real depende da engenharia e da segurança da Vale.
+
+Contrato da leitura (uma mensagem JSON por leitura, com o código do dispositivo) e a resposta, como o back-end valida hoje:
+
+```json
+{"tipo":"telemetria","v":1,"id":"ESP32-0A1B","seq":1842,"ts":"2026-11-11T14:03:30Z","lat":-2.57120,"lon":-44.37010,"vel":4.8,"alt":12,"sats":9,"hdop":0.9,"bat":78,"gw":"GW-01","rssi":-97}
+{"tipo":"ack","id":"ESP32-0A1B","seq":1842}
+```
 - **Rota não acessa banco; regra não fica na rota.** Cada módulo da API segue `router → service → repository`, e um módulo só fala com outro pelo `service`.
 
 ## Stack
 
 | Camada | Tecnologias |
 |---|---|
-| **Painel** (`frontend/`) | Vite, React 19, TypeScript, Tailwind 4, React Router, TanStack Query, Leaflet, Vitest |
-| **API** (`backend/`) | Python 3.12, FastAPI, Pydantic, SQLAlchemy 2, Alembic, GeoAlchemy2, JWT + Argon2, pytest, ruff |
-| **Dados** | PostgreSQL 16 com PostGIS (12 tabelas modeladas) |
-| **Infra** (`docker-compose.yml`) | Docker Compose: Caddy, API e banco numa VM só · GitHub Actions |
+| **Painel** (`frontend/`) | Vite, React 19, TypeScript, Tailwind 4, React Router, TanStack Query, Leaflet, WebSocket do navegador, Vitest |
+| **API** (`backend/`) | Python 3.12, FastAPI, Uvicorn, Pydantic, SQLAlchemy 2, Alembic, GeoAlchemy2, JWT + Argon2, pytest, ruff |
+| **Cálculo** (declarado, ainda sem uso no código) | Shapely (cercas) e SciPy (algoritmo húngaro do revezamento) |
+| **Dados** | PostgreSQL 16 com PostGIS (12 tabelas modeladas, sem migração ainda) |
+| **Campo** (proposto) | Tag Heltec V4 e gateway LoRa com ESP32-S3, firmware em C++ (Arduino ou ESP-IDF) |
+| **Infra** (`docker-compose.yml`) | Docker Compose: Caddy (HTTPS automático), API e banco numa VM Linux só (Ubuntu 24.04, 2 vCPU, 4 GB) · GitHub Actions |
 
 ## Como rodar
 
@@ -162,8 +189,9 @@ O CI (`.github/workflows/ci.yml`) roda tudo isso e constrói a imagem da API. As
 
 - **REST** em `/api/v1`, com JWT e três perfis (`analista`, `seguranca`, `admin`). Só `/health` está pronto; as demais rotas existem e respondem `501`.
 - **`/ws/gateway`** exige token do gateway, valida cada leitura JSON e responde `{"tipo":"ack","id","seq"}`. Uma leitura repetida recebe o ack, mas não vai ao painel.
-- **`/ws/painel`** exige o JWT do analista e recebe um evento a cada leitura nova.
-- **`/ws/rele`** exige o token do controlador do relé.
+- **`/ws/painel`** exige o JWT de login e recebe o evento `posicao` a cada leitura nova. Os outros quatro eventos do contrato (`dispositivo_status`, `alerta`, `bloqueio`, `acionamento`) ainda não são emitidos. O navegador não envia cabeçalho no WebSocket, então hoje o JWT vai em `?token=` na URL, que pode aparecer em logs; como passar o token é decisão em aberto.
+- **`/ws/rele`** exige o token do controlador do relé e fica esperando: o envio de bloquear/liberar e o sinal de vida ainda não existem.
+- **Login:** o JWT dura 15 min e a proposta é renovar com cookie httpOnly. As rotas `/auth/*` existem, mas respondem `501`.
 
 ## Estrutura
 
