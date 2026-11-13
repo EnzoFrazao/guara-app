@@ -27,12 +27,10 @@ Saber, em tempo real, onde está cada maquinista e manobrista no pátio — e qu
 ## Demonstração
 
 <div align="center">
-  <video src="https://github.com/EnzoFrazao/guara-app/raw/main/docs/video/guara-demo.mp4" poster="docs/img/guara-demo-capa.jpg" controls muted width="720">
-    Seu navegador não toca o vídeo aqui. <a href="https://github.com/EnzoFrazao/guara-app/raw/main/docs/video/guara-demo.mp4">Abra o arquivo</a>.
-  </video>
+  <img src="docs/video/guara-demo.gif" alt="Demonstração do GUARÁ: do dispositivo no pátio até a tela do painel" width="800" />
 </div>
 
-> 42 s, do dispositivo no pátio até a tela do painel. Se o player não aparecer, [abra o vídeo direto](https://github.com/EnzoFrazao/guara-app/raw/main/docs/video/guara-demo.mp4) (o GitHub não mostra `.mp4` na página do arquivo). Os nomes e as posições mostrados são **fictícios**.
+> 42 s, do dispositivo no pátio até a tela do painel, em GIF (sem som). Para ver com som e em qualidade melhor, [abra o vídeo](https://github.com/EnzoFrazao/guara-app/raw/main/docs/video/guara-demo.mp4) (o GitHub não toca `.mp4` na página do arquivo, só no link direto). Os nomes e as posições mostrados são **fictícios**.
 
 <table>
   <tr>
