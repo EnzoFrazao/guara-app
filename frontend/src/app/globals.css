@@ -161,13 +161,6 @@ body {
   .campo {
     font-size: 16px;
   }
-
-  /* O Netlify injeta o selo "Powered by Netlify" num iframe fixo no canto de baixo, por cima
-     das abas (Histórico e Cadastro). Sobe o selo para cima da barra (3.5rem de NavMobile + borda
-     + área segura) em vez de escondê-lo. O estilo dele é inline, daí o !important. */
-  #nl-badge-frame {
-    bottom: calc(3.5rem + 1px + env(safe-area-inset-bottom)) !important;
-  }
 }
 /* Dedo precisa de alvo maior que mouse: 44 px é o mínimo recomendado. */
 @media (pointer: coarse) {

@@ -22,6 +22,8 @@ Saber, em tempo real, onde está cada maquinista e manobrista no pátio — e qu
 
 ---
 
+> **EN:** GUARÁ is a 5-day prototype for Vale's KaizenDO innovation challenge at the Ponta da Madeira rail terminal (São Luís, Brazil). About 50 locomotive drivers and ground crew work across 13 km of yard and nobody knows exactly where each one is. Each person carries an ESP32 tag with GPS and a radio, gateways forward the positions to an API, and a web panel shows who is where, who can reach a work front fastest and a history for the shift. **What is built here is the web panel (illustrative data) and an API skeleton**; the hardware and the safety relay are the proposed design.
+
 ## Demonstração
 
 https://github.com/user-attachments/assets/99c044fc-238a-470b-b75a-42dcc65f4911
@@ -188,6 +190,8 @@ Caddyfile              HTTPS, /api e /ws para a API, painel estático
 
 - **Tema claro como variante aditiva.** Cada elemento mantém a classe do escuro e *ganha* uma `claro:` ao lado; o escuro é imutável por construção. O claro é o padrão de quem visita.
 - **SPA em Vite, sem servidor Node.** A homologação não tem servidor Node, e a stack acordada é Vite + React Router + TanStack Query. As telas desmontam ao navegar, então filtros digitados não persistem ao voltar.
+- **Contraste AA no claro.** O cinza oficial da Vale não passa em AA para texto, então o tema claro usa tons mais escuros (grafite e ardósia).
+- **WebSocket, sem MQTT, na versão final.** O MQTT ficou só no teste de bancada (broker público); na homologação gateway, relé e painel falam com a API por WebSocket.
 - **Posição a cada 30 s.** A pé, uma pessoa anda cerca de 40 m em 30 s, bem menos que um trecho de 1,5 km, e o intervalo maior economiza bateria e rádio.
 - **Falha segura no bloqueio.** Perdeu o sinal de quem estava na área? O bloqueio continua.
 - **Liberar um bloqueio exige confirmação humana** (perfil `seguranca`).
@@ -199,6 +203,10 @@ Caddyfile              HTTPS, /api e /ws para a API, painel estático
 - As coordenadas dos trechos "X" divergem do diagrama oficial do pátio e aguardam pontos levantados em campo.
 - O layout de celular só foi conferido em viewport emulado; falta um aparelho real.
 - A homologação depende de respostas da TI da Vale (rede do gateway, banco, login corporativo, retenção de dados e relé).
+
+## Documentação
+
+Este repositório guarda só o código. O contexto do desafio (problema, solução, especificação das telas, fotos da visita de campo), a memória técnica (`specs/`, com ADRs) e o material de apresentação ficam na pasta `documentos/` do projeto, fora do Git. Cada pasta de tela do painel tem um README próprio (`frontend/src/app/<tela>/README.md`).
 
 ## Time
 

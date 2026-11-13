@@ -5,8 +5,8 @@ import HistoricoPage from "./historico/page";
 import MapaPage from "./mapa/page";
 import { Shell } from "./Shell";
 
-// As quatro telas, uma pasta por pessoa (ver README do front). `/` abre o mapa: é o que o link
-// publicado e o QR code da apresentação mostram.
+// As quatro telas, uma pasta por pessoa (ver README do front). `/` abre o mapa: é o que o QR code
+// da apresentação mostra.
 export const roteador = createBrowserRouter([
   {
     element: <Shell />,
