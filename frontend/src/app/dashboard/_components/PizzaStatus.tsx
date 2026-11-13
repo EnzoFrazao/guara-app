@@ -1,5 +1,3 @@
-"use client";
-
 // Rosca de "pessoas por status". É part-to-whole com 5 fatias e valores bem
 // separados, que é o caso em que pizza funciona.
 //

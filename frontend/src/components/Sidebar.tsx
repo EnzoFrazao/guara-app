@@ -1,14 +1,10 @@
-"use client";
-
-import Image from "next/image";
-import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { Link, useLocation } from "react-router";
 import { adminAtual } from "@/lib/dados";
 import { BotaoTema } from "./BotaoTema";
 import { ITENS } from "./navegacao";
 
 export function Sidebar() {
-  const caminho = usePathname();
+  const caminho = useLocation().pathname;
   // Protótipo sem login: o admin é fixo, só para deixar claro de quem é o sistema.
   const admin = adminAtual();
   return (
@@ -19,7 +15,7 @@ export function Sidebar() {
           (public/guara-logo-completo.png) tem o nome em tinta escura, que sumiria
           no tema preto, e a legenda ficaria ilegível nos 224 px da barra. */}
       <div className="flex items-center gap-3 px-5 py-6">
-        <Image src="/guara-marca.png" alt="" width={44} height={31} priority className="shrink-0" />
+        <img src="/guara-marca.png" alt="" width={44} height={31} className="shrink-0" />
         <div>
           <p className="text-lg font-bold leading-none tracking-tight text-zinc-50 claro:text-tinta">GUARÁ</p>
           <p className="mt-1 text-[10px] leading-tight text-zinc-500 claro:text-tinta-suave">
@@ -34,7 +30,7 @@ export function Sidebar() {
           return (
             <Link
               key={item.href}
-              href={item.href}
+              to={item.href}
               aria-current={ativo ? "page" : undefined}
               className={`rounded-md px-3 py-2 text-sm transition-colors ${
                 ativo ? "bg-zinc-100 claro:bg-verde-vale font-medium text-zinc-900 claro:text-white" : "text-zinc-400 claro:text-tinta-media hover:bg-zinc-900 claro:hover:bg-papel hover:text-zinc-100 claro:hover:text-tinta"

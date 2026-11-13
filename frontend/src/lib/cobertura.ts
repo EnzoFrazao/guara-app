@@ -4,7 +4,7 @@
 // círculo cobre o pátio todo e a malha some numa mancha só. Em vez de um número fixo,
 // usamos o menor raio que ainda liga todo mundo: dois círculos de raio r se tocam
 // quando a distância entre os centros é <= 2r, então basta cobrir a maior aresta da
-// árvore geradora mínima. Sem Leaflet aqui, porque MapaView também roda no servidor.
+// árvore geradora mínima. Sem Leaflet aqui, para a conta rodar e ser testada sem navegador.
 
 /** Menor raio desenhado, para uma pessoa sozinha (ou um trecho filtrado) ainda ter área. */
 export const RAIO_MINIMO_M = 150;

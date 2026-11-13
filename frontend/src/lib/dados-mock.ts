@@ -1,6 +1,6 @@
 // Dados ILUSTRATIVOS para o protótipo visual.
 // Coordenadas aproximadas da região do TFPM, só para o mapa ter onde desenhar.
-// Tudo é gerado com semente fixa, para servidor e navegador produzirem os mesmos dados.
+// Tudo é gerado com semente fixa, para os dados serem sempre os mesmos (e os testes, repetíveis).
 
 import type {
   Admin,

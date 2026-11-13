@@ -2,8 +2,8 @@
 
 /* ───────────────────────── Temas ─────────────────────────
    Dois temas: claro, com as cores oficiais da Vale, e escuro (para o CCO em sala de
-   pouca luz). O atributo `data-tema="claro"` no <html> liga o claro, e o servidor já
-   o manda: o claro é o padrão de quem visita (ADR 0002).
+   pouca luz). O atributo `data-tema="claro"` no <html> liga o claro, e o index.html já
+   o traz: o claro é o padrão de quem visita (ADR 0002).
 
    REGRA: o escuro é o estado base DO CSS (sem atributo) e NÃO pode mudar. Por isso
    as telas mantêm as classes que já tinham e só GANHAM uma variante `claro:` ao

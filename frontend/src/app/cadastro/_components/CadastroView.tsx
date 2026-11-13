@@ -1,22 +1,14 @@
-"use client";
-
 // Tela do administrador: cadastra operários e ESP32 e vincula um ao outro.
 // O operário não acessa o sistema — ele só é identificado pela tag que carrega.
 // O cadastro em si é o wizard (NovoCadastroWizard); aqui ficam o resumo, a gestão dos
 // vínculos e o estoque. Veja o que falta em ../README.md.
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { Card } from "@/components/Card";
-import {
-  cadastrarDispositivo,
-  listarDispositivos,
-  listarPessoas,
-  removerPessoa,
-  restaurarDados,
-  vincularDispositivo,
-} from "@/lib/dados";
+import { useDispositivos, usePessoas, useRecarregarDados } from "@/lib/consultas";
+import { cadastrarDispositivo, removerPessoa, restaurarDados, vincularDispositivo } from "@/lib/dados";
 import { COR_BATERIA, ROTULO_FUNCAO, ROTULO_TURNO, faixaBateria } from "@/lib/rotulos";
-import type { Dispositivo, Funcao, Pessoa, Turno } from "@/lib/tipos";
+import type { Funcao, Pessoa, Turno } from "@/lib/tipos";
 import { NovoCadastroWizard } from "./NovoCadastroWizard";
 
 function Bateria({ pct }: { pct: number }) {
@@ -42,13 +34,13 @@ function desde(iso: string, agora: number) {
 }
 
 export function CadastroView() {
-  const [pessoas, setPessoas] = useState<Pessoa[]>([]);
-  const [dispositivos, setDispositivos] = useState<Dispositivo[]>([]);
+  const { dados: pessoas, atualizadoEm: agora } = usePessoas();
+  const { dados: dispositivos } = useDispositivos();
+  // Recarrega pessoas, dispositivos e o que o mapa mostra depois de gravar.
+  const recarregar = useRecarregarDados();
   const [erro, setErro] = useState<string | null>(null);
   const [sucesso, setSucesso] = useState<string | null>(null);
-  // Fica em estado, e não em Date.now() no render, para o servidor e o navegador
-  // renderizarem a mesma coisa na primeira passada.
-  const [agora, setAgora] = useState(0);
+  // `agora` é a hora da última carga (0 antes da primeira): serve de referência para "há 12 min".
 
   const [busca, setBusca] = useState("");
   const [filtroFuncao, setFiltroFuncao] = useState<Funcao | "">("");
@@ -62,20 +54,6 @@ export function CadastroView() {
   /** Id da pessoa esperando confirmação de exclusão. Excluir não é um clique só. */
   const [confirmando, setConfirmando] = useState<string | null>(null);
 
-  const buscar = useCallback(() => Promise.all([listarPessoas(), listarDispositivos()]), []);
-
-  // O lint não deixa chamar setState direto no corpo de um efeito, então a carga
-  // inicial e as recargas passam por aqui, sempre dentro de um callback.
-  const aplicar = useCallback(([ps, ds]: [Pessoa[], Dispositivo[]]) => {
-    setPessoas([...ps]);
-    setDispositivos([...ds]);
-    setAgora(Date.now());
-  }, []);
-
-  useEffect(() => {
-    buscar().then(aplicar);
-  }, [buscar, aplicar]);
-
   /** Roda uma ação de cadastro, recarrega a tela e mostra o erro ou a confirmação. */
   const executar = useCallback(
     async (acao: () => Promise<string>) => {
@@ -83,22 +61,22 @@ export function CadastroView() {
       setSucesso(null);
       try {
         const mensagem = await acao();
-        aplicar(await buscar());
+        await recarregar();
         setSucesso(mensagem);
       } catch (e) {
         setErro((e as Error).message);
       }
     },
-    [buscar, aplicar],
+    [recarregar],
   );
 
   const recarregarCom = useCallback(
     async (mensagem: string) => {
       setErro(null);
-      aplicar(await buscar());
+      await recarregar();
       setSucesso(mensagem);
     },
-    [buscar, aplicar],
+    [recarregar],
   );
 
   const livres = useMemo(() => dispositivos.filter((d) => !d.pessoaId), [dispositivos]);

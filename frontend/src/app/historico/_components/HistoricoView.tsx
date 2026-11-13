@@ -1,17 +1,13 @@
-"use client";
-
 // Filtros e tabela das leituras registradas. Veja o que falta em ../README.md.
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { Card } from "@/components/Card";
 import { PainelFiltros } from "@/components/PainelFiltros";
 import { StatusBadge } from "@/components/StatusBadge";
-import { historico, listarTrechos } from "@/lib/dados";
+import { useHistorico, useTrechos } from "@/lib/consultas";
 import { DIA_BASE } from "@/lib/dados-mock";
 import { ROTULO_FUNCAO, ROTULO_STATUS, ROTULO_TURNO } from "@/lib/rotulos";
-import type { FiltrosHistorico, Leitura, Pessoa, Trecho } from "@/lib/tipos";
-
-type Linha = Leitura & { pessoa: Pessoa };
+import type { FiltrosHistorico } from "@/lib/tipos";
 
 const POR_PAGINA = 50;
 
@@ -19,25 +15,16 @@ const hora = (iso: string) => iso.slice(11, 16);
 
 export function HistoricoView() {
   const [filtros, setFiltros] = useState<FiltrosHistorico>({ dia: DIA_BASE });
-  const [linhas, setLinhas] = useState<Linha[]>([]);
-  const [trechos, setTrechos] = useState<Trecho[]>([]);
   const [pagina, setPagina] = useState(0);
+  // Mantém as linhas anteriores na tela enquanto os filtros novos carregam.
+  const { dados: linhas } = useHistorico(filtros);
+  const { dados: trechos } = useTrechos();
 
-  const aplicar = useCallback((r: Linha[]) => {
-    setLinhas(r);
-    setPagina(0);
-  }, []);
-
-  useEffect(() => {
-    historico(filtros).then(aplicar);
-  }, [filtros, aplicar]);
-
-  useEffect(() => {
-    listarTrechos().then(setTrechos);
-  }, []);
-
-  const mudar = (campo: keyof FiltrosHistorico, valor: string) =>
+  // Filtro novo volta para a primeira página.
+  const mudar = (campo: keyof FiltrosHistorico, valor: string) => {
     setFiltros((f) => ({ ...f, [campo]: valor || undefined }));
+    setPagina(0);
+  };
 
   const visiveis = linhas.slice(pagina * POR_PAGINA, (pagina + 1) * POR_PAGINA);
   const nomeTrecho = useMemo(() => new Map(trechos.map((t) => [t.id, t.nome])), [trechos]);

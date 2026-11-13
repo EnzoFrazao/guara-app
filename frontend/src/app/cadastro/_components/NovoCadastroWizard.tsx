@@ -1,5 +1,3 @@
-"use client";
-
 // Cadastro de uma pessoa em 4 passos. As regras de validação não moram aqui: vêm de
 // @/lib/dados, as mesmas que o cadastro usa no fim. Aqui elas só são chamadas mais cedo,
 // para o passo errado não deixar avançar.

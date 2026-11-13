@@ -1,0 +1,51 @@
+<!doctype html>
+<!--
+  O claro é o padrão de quem visita (ADR 0002): data-tema="claro" já vem neste HTML e só um "escuro"
+  salvo o desliga. O color-scheme vem do CSS (:root e [data-tema="claro"], em src/app/globals.css).
+-->
+<html lang="pt-BR" data-tema="claro" class="h-full antialiased">
+  <head>
+    <meta charset="UTF-8" />
+    <!-- Muita gente abre pelo celular, via QR code. viewport-fit=cover deixa o fundo ir até as
+         bordas do iPhone; as barras compensam com env(safe-area-inset-*). O zoom do usuário fica
+         liberado de propósito (acessibilidade). -->
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <!-- Cor do claro, que é o padrão; o script abaixo troca para quem escolheu o escuro. -->
+    <meta name="theme-color" content="#f3f4f5" />
+    <title>GUARÁ · Posicionamento Operacional</title>
+    <meta name="description" content="Localização em tempo real de maquinistas e manobristas no TFPM" />
+    <!-- Open Graph dá título e descrição à prévia quando o link é colado no WhatsApp ou no Teams. -->
+    <meta property="og:title" content="GUARÁ · Posicionamento Operacional" />
+    <meta property="og:description" content="Localização em tempo real de maquinistas e manobristas no TFPM" />
+    <meta property="og:locale" content="pt_BR" />
+    <meta property="og:type" content="website" />
+    <link rel="icon" href="/icon.png" type="image/png" sizes="256x256" />
+    <link rel="apple-touch-icon" href="/apple-icon.png" type="image/png" sizes="256x256" />
+    <!-- Desliga o claro para quem escolheu o escuro, antes da primeira pintura (senão a página
+         aparece clara e "pisca"). Inline porque um arquivo externo chegaria tarde. É uma SPA sem
+         hidratação, então pode ficar aqui no <head>. -->
+    <script>
+      try {
+        if (localStorage.getItem("guara.tema") === "escuro") {
+          document.documentElement.removeAttribute("data-tema");
+          var m = function () {
+            document.querySelectorAll('meta[name="theme-color"]').forEach(function (e) {
+              e.setAttribute("content", "#09090b");
+            });
+          };
+          m();
+          document.addEventListener("DOMContentLoaded", m);
+        }
+      } catch (e) {}
+    </script>
+  </head>
+  <body class="flex min-h-full flex-col bg-zinc-950 claro:bg-areia text-zinc-100 claro:text-tinta lg:flex-row">
+    <!-- display: contents: a barra lateral, o topo, o <main> e as abas participam direto do flex do <body>. -->
+    <div id="root" class="contents"></div>
+    <!-- VLibras (tradução para Libras do governo federal). O loader se inicializa sozinho: cria o
+         botão flutuante à direita, fora da árvore do React, e só baixa o app do avatar quando
+         alguém clica. Estando no HTML, entra uma vez só, mesmo com navegação no cliente. -->
+    <script defer src="https://vlibras.gov.br/app/vlibras-plugin.js"></script>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

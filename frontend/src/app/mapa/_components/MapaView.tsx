@@ -1,50 +1,32 @@
-"use client";
-
 // Filtros, legenda e atualização periódica. Veja o que falta em ../README.md.
-// O Leaflet usa `window`, então o mapa é carregado só no navegador (ssr: false).
+// O Leaflet é pesado e só roda no navegador: o mapa entra por import dinâmico (lazy), com um
+// esqueleto no lugar enquanto carrega.
 
-import dynamic from "next/dynamic";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { Suspense, lazy, useMemo, useState } from "react";
 import { AoVivo } from "@/components/AoVivo";
 import { Card } from "@/components/Card";
 import { raioDeCobertura } from "@/lib/cobertura";
 import { PainelFiltros } from "@/components/PainelFiltros";
-import { listarTrechos, posicoesAtuais } from "@/lib/dados";
+import { usePosicoesAtuais, useTrechos } from "@/lib/consultas";
 import { COR_STATUS_MAPA, ROTULO_FUNCAO, ROTULO_STATUS, ROTULO_TURNO } from "@/lib/rotulos";
-import type { Funcao, PosicaoAtual, StatusTrabalho, Trecho, TrechoId, Turno } from "@/lib/tipos";
+import type { Funcao, StatusTrabalho, TrechoId, Turno } from "@/lib/tipos";
 
-const MapaLeaflet = dynamic(() => import("./MapaLeaflet"), {
-  ssr: false,
-  loading: () => <div className="h-[60svh] min-h-80 animate-pulse lg:h-[560px] rounded-lg border border-zinc-800 claro:border-traco bg-zinc-900 claro:bg-papel" />,
-});
+const MapaLeaflet = lazy(() => import("./MapaLeaflet"));
 
-const INTERVALO_MS = 5000;
+function EsqueletoDoMapa() {
+  return <div className="h-[60svh] min-h-80 animate-pulse lg:h-[560px] rounded-lg border border-zinc-800 claro:border-traco bg-zinc-900 claro:bg-papel" />;
+}
 
 export function MapaView() {
-  const [posicoes, setPosicoes] = useState<PosicaoAtual[]>([]);
-  const [trechos, setTrechos] = useState<Trecho[]>([]);
-  const [atualizadoEm, setAtualizadoEm] = useState(0);
+  // Atualiza a cada 5 s (ver INTERVALO_MS em lib/consultas.ts).
+  const { dados: posicoes, atualizadoEm } = usePosicoesAtuais();
+  const { dados: trechos } = useTrechos();
   const [funcao, setFuncao] = useState<Funcao | "">("");
   const [status, setStatus] = useState<StatusTrabalho | "">("");
   const [turno, setTurno] = useState<Turno | "">("");
   const [trecho, setTrecho] = useState<TrechoId | "">("");
   const [busca, setBusca] = useState("");
   const [cobertura, setCobertura] = useState(true);
-
-  const aplicar = useCallback((ps: PosicaoAtual[]) => {
-    setPosicoes(ps);
-    setAtualizadoEm(Date.now());
-  }, []);
-
-  useEffect(() => {
-    posicoesAtuais().then(aplicar);
-    const id = setInterval(() => posicoesAtuais().then(aplicar), INTERVALO_MS);
-    return () => clearInterval(id);
-  }, [aplicar]);
-
-  useEffect(() => {
-    listarTrechos().then(setTrechos);
-  }, []);
 
   const filtradas = useMemo(
     () =>
@@ -134,7 +116,9 @@ export function MapaView() {
         </div>
       </Card>
 
-      <MapaLeaflet posicoes={filtradas} raioCoberturaM={mostrarCobertura ? raioCobertura : 0} />
+      <Suspense fallback={<EsqueletoDoMapa />}>
+        <MapaLeaflet posicoes={filtradas} raioCoberturaM={mostrarCobertura ? raioCobertura : 0} />
+      </Suspense>
     </div>
   );
 }

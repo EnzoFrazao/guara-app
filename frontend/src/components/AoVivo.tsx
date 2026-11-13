@@ -1,9 +1,7 @@
-"use client";
-
 /**
  * Selo de "ao vivo": ponto piscando + hora da última atualização.
  * `atualizadoEm` é um Date.now() vindo do estado da tela. Enquanto for 0 (antes da
- * primeira carga) a hora não aparece, para servidor e navegador renderizarem igual.
+ * primeira carga) a hora não aparece.
  */
 export function AoVivo({
   atualizadoEm = 0,

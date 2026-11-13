@@ -1,9 +1,9 @@
-<!-- BEGIN:nextjs-agent-rules -->
+# Painel GUARÁ (Vite + React)
 
-## This is NOT the Next.js you know
+Leia o [README](README.md) antes de mexer: regras para não dar conflito, estrutura e decisões que valem
+para todas as telas. A memória técnica está em `documentos/specs/` (ver o `AGENTS.md` da raiz).
 
-This version has breaking changes — APIs, conventions, and file structure may all differ from your training data. Read the relevant guide in `node_modules/next/dist/docs/` (resolved from this file's directory; in monorepos the `next` package may not be visible from the repo root) before writing any code. Heed deprecation notices.
-
-This block is written and re-added by `next dev` — verify at `node_modules/next/dist/server/lib/generate-agent-files.js`. Removing it from a diff only re-creates the uncommitted change; committing it with your work keeps the tree clean.
-
-<!-- END:nextjs-agent-rules -->
+- Não é mais Next.js (ADR 0003): SPA em Vite, rotas em `src/app/router.tsx`, HTML em `index.html`.
+  Não procure `layout.tsx`, `next/*`, `"use client"` ou `node_modules/next`.
+- Dados: hooks de `@/lib/consultas` → `@/lib/dados`. Nunca importe `dados-mock.ts` na tela.
+- Gates: `npm run lint`, `npm test`, `npm run build`.

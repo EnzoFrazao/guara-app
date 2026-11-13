@@ -37,7 +37,7 @@ function repor<T>(destino: T[], origem: readonly T[]) {
   destino.splice(0, destino.length, ...origem);
 }
 
-/** Lê o localStorage na primeira chamada. No servidor (SSR) não faz nada. */
+/** Lê o localStorage na primeira chamada. Fora do navegador (testes) não faz nada. */
 function hidratar() {
   if (hidratado || typeof window === "undefined") return;
   hidratado = true;

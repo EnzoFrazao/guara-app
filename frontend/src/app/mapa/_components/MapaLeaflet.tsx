@@ -1,5 +1,3 @@
-"use client";
-
 // Leaflet puro, sem react-leaflet.
 //
 // Por quê: o MapContainer do react-leaflet cria o mapa num callback de ref, e não num

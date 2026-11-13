@@ -1,9 +1,7 @@
-"use client";
-
 // Alternador entre o tema claro (padrão, com as cores da Vale) e o escuro.
 //
-// O claro já vem no HTML do servidor; a escolha do escuro fica no localStorage e é
-// aplicada ANTES da primeira pintura pelo script inline de `layout.tsx`. Ou seja, a verdade sobre o tema mora no atributo
+// O claro já vem no `index.html`; a escolha do escuro fica no localStorage e é aplicada ANTES
+// da primeira pintura pelo script inline do `<head>` do `index.html`. Ou seja, a verdade sobre o tema mora no atributo
 // `data-tema` do <html>, fora do React — por isso o botão lê esse estado com
 // `useSyncExternalStore` em vez de um useEffect: é a API feita para fonte externa, e
 // o lint proíbe setState no corpo de um efeito.
@@ -27,18 +25,12 @@ function lerDoNavegador(): Tema {
   return document.documentElement.getAttribute("data-tema") === "claro" ? "claro" : "escuro";
 }
 
-/** O servidor manda <html data-tema="claro">: o claro é o padrão (ADR 0002). */
-function lerDoServidor(): Tema {
-  return "claro";
-}
-
 function aplicar(tema: Tema) {
   const raiz = document.documentElement;
   if (tema === "claro") raiz.setAttribute("data-tema", "claro");
   else raiz.removeAttribute("data-tema");
 
-  // A barra de status do celular acompanha o tema. São todas as metas porque o Next insere
-  // uma cópia depois de hidratar.
+  // A barra de status do celular acompanha o tema.
   document
     .querySelectorAll('meta[name="theme-color"]')
     .forEach((meta) => meta.setAttribute("content", tema === "claro" ? "#f3f4f5" : "#09090b"));
@@ -63,7 +55,7 @@ const ESTILO_COMPACTO =
 
 /** `compacto` mostra só o ícone (topo do celular, onde não sobra largura). */
 export function BotaoTema({ className = "", compacto = false }: { className?: string; compacto?: boolean }) {
-  const tema = useSyncExternalStore(assinar, lerDoNavegador, lerDoServidor);
+  const tema = useSyncExternalStore(assinar, lerDoNavegador);
   const vaiParaClaro = tema === "escuro";
   const rotulo = vaiParaClaro ? "Tema claro" : "Tema escuro";
 

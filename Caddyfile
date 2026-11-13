@@ -1,0 +1,17 @@
+# HTTPS automático (Let's Encrypt) quando SITE_DOMINIO é um domínio público; em `localhost`, certificado local.
+{$SITE_DOMINIO:localhost} {
+	# API REST e os três WebSockets (gateway, painel, relé) passam pela mesma porta 443.
+	handle /api/* {
+		reverse_proxy api:8000
+	}
+	handle /ws/* {
+		reverse_proxy api:8000
+	}
+
+	# Painel: arquivos estáticos do Vite; rota desconhecida cai no index.html (React Router).
+	handle {
+		root * /srv/painel
+		try_files {path} /index.html
+		file_server
+	}
+}

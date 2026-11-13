@@ -1,14 +1,12 @@
-"use client";
-
 // Visão do turno em uma tela. Veja o que falta em ../README.md.
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { AoVivo } from "@/components/AoVivo";
 import { Card } from "@/components/Card";
 import { StatusBadge } from "@/components/StatusBadge";
-import { listarAlertas, listarTrechos, posicoesAtuais } from "@/lib/dados";
+import { useAlertas, usePosicoesAtuais, useTrechos } from "@/lib/consultas";
 import { COR_STATUS_MAPA, ROTULO_ALERTA, ROTULO_FUNCAO, ROTULO_STATUS } from "@/lib/rotulos";
-import type { Alerta, Funcao, PosicaoAtual, StatusTrabalho, Trecho } from "@/lib/tipos";
+import type { Funcao, StatusTrabalho } from "@/lib/tipos";
 import { PizzaStatus } from "./PizzaStatus";
 
 const ORDEM_STATUS: StatusTrabalho[] = ["manobrando", "almocando", "aguardando_programacao", "descansando", "sem_sinal"];
@@ -16,35 +14,16 @@ const ORDEM_STATUS: StatusTrabalho[] = ["manobrando", "almocando", "aguardando_p
 /** Status que contam como "em campo agora". Quem está sem sinal não dá para acionar. */
 const EM_CAMPO: StatusTrabalho[] = ["manobrando", "almocando", "aguardando_programacao", "descansando"];
 
-const INTERVALO_MS = 5000;
-
 export function DashboardView() {
-  const [posicoes, setPosicoes] = useState<PosicaoAtual[]>([]);
-  const [alertas, setAlertas] = useState<Alerta[]>([]);
-  const [trechos, setTrechos] = useState<Trecho[]>([]);
-  const [atualizadoEm, setAtualizadoEm] = useState(0);
+  // Atualizam a cada 5 s (ver INTERVALO_MS em lib/consultas.ts).
+  const { dados: posicoes, atualizadoEm } = usePosicoesAtuais();
+  const { dados: alertas } = useAlertas(true);
+  const { dados: trechos } = useTrechos();
 
   // Filtros do bloco "trabalhando agora"
   const [status, setStatus] = useState<StatusTrabalho | "">("");
   const [funcao, setFuncao] = useState<Funcao | "">("");
   const [busca, setBusca] = useState("");
-
-  const buscar = useCallback(
-    () => Promise.all([posicoesAtuais(), listarAlertas(true), listarTrechos()]),
-    [],
-  );
-  const aplicar = useCallback(([ps, as, ts]: [PosicaoAtual[], Alerta[], Trecho[]]) => {
-    setPosicoes(ps);
-    setAlertas(as);
-    setTrechos(ts);
-    setAtualizadoEm(Date.now());
-  }, []);
-
-  useEffect(() => {
-    buscar().then(aplicar);
-    const id = setInterval(() => buscar().then(aplicar), INTERVALO_MS);
-    return () => clearInterval(id);
-  }, [buscar, aplicar]);
 
   const porStatus = useCallback((s: StatusTrabalho) => posicoes.filter((p) => p.status === s).length, [posicoes]);
   const bateriaBaixa = posicoes.filter((p) => p.dispositivo.bateriaPct < 20).length;

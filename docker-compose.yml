@@ -1,0 +1,42 @@
+# Versão de homologação: três containers (Caddy, API, banco) numa VM só.
+# Subir:  cd codigo && docker compose up -d --build   (precisa de codigo/.env; modelo em backend/.env.example)
+# O painel (Vite) é estático: `cd frontend && npm ci && npm run build` gera frontend/dist, que o Caddy serve.
+
+services:
+  caddy:
+    image: caddy:2
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - ./frontend/dist:/srv/painel:ro
+      - caddy_data:/data
+    depends_on:
+      - api
+
+  api:
+    build: ./backend
+    env_file: .env
+    depends_on:
+      db:
+        condition: service_healthy
+    # Sem ports: só o Caddy fala com a API (porta interna 8000).
+
+  db:
+    image: postgis/postgis:16-3.4
+    environment:
+      POSTGRES_DB: guara
+      POSTGRES_USER: guara_app
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?defina POSTGRES_PASSWORD no .env}
+    volumes:
+      - pg_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U guara_app -d guara"]
+      interval: 5s
+      retries: 10
+    # Sem ports: a 5432 fica fechada para fora.
+
+volumes:
+  caddy_data:
+  pg_data:
