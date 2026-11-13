@@ -26,9 +26,13 @@ Saber, em tempo real, onde está cada maquinista e manobrista no pátio — e qu
 
 ## Demonstração
 
-https://github.com/user-attachments/assets/99c044fc-238a-470b-b75a-42dcc65f4911
+<div align="center">
+  <a href="https://github.com/EnzoFrazao/guara-app/blob/main/docs/video/guara-demo.mp4">
+    <img src="docs/img/guara-demo-capa.jpg" alt="Vídeo de demonstração do GUARÁ: clique para assistir" width="720" />
+  </a>
+</div>
 
-> Do dispositivo no pátio até a tela do painel. Os nomes e as posições mostrados são **fictícios**.
+> ▶️ **Clique na imagem para assistir** (42 s, [`docs/video/guara-demo.mp4`](docs/video/guara-demo.mp4)). Do dispositivo no pátio até a tela do painel. Os nomes e as posições mostrados são **fictícios**.
 
 <table>
   <tr>
@@ -171,7 +175,7 @@ cp backend/.env.example .env   # defina POSTGRES_PASSWORD e os segredos
 docker compose up -d --build
 ```
 
-> ⚠️ Este caminho ainda **não foi verificado de ponta a ponta** (`docker build`, Caddy e migração do banco).
+> ⚠️ Este caminho ainda **não foi verificado de ponta a ponta**. O `docker build` da API passa no CI; faltam o `docker compose up`, o Caddy e a migração do banco.
 
 ## Testes e qualidade
 
@@ -209,6 +213,7 @@ backend/               API FastAPI
                          acionamentos, alertas, tempo_real
   alembic/               migrações (ainda sem a inicial)
   tests/                 pytest
+docs/                  imagens das telas e o vídeo de demonstração
 docker-compose.yml     Caddy + API + PostGIS
 Caddyfile              HTTPS, /api e /ws para a API, painel estático
 .github/workflows/     CI
